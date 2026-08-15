@@ -1,0 +1,46 @@
+<html color-mode="user"></html>
+
+<head>
+<title>Fix: Steam Deck Make Emudeck recognize PC98 BIOS</title>
+
+<link rel="stylesheet" href="/css/mvp.css">
+<a href="/"><-- Home</a>
+
+</head>
+
+<body>
+<h1>Fix: Make Emudeck recognize PC98 BIOS</h1>
+<time datetime="2026-08-14">August 14 2026</time><br>
+<p>
+
+Credit to original poster: <a href="https://old.reddit.com/r/SteamDeck/comments/zlergk/emudeck_doesnt_recognize_pc98_want_to_emulate/"> https://old.reddit.com/r/SteamDeck/comments/zlergk/emudeck_doesnt_recognize_pc98_want_to_emulate/ </a>
+<br>
+Here's how I setup PC98 emulation in Emudeck:-
+<br>
+Search Google for Abdess Retroarch BIOS files and grab the files from the PC98 folder on the github page (should be 11 files in total). I can't link them directly due to subreddit rules.
+<br>
+Once downloaded, put them in a folder called np2kai in your Emudeck bios folder.
+<br>
+Put your roms in the pc98 folder in the Emudeck roms folder. I had the best luck using roms with the .hdi file extension. Emulation Station should recognise the roms on startup.
+<br>
+To configure controls, start a game and then press Select and Y button on the Steam Deck. This will bring up the Retroarch quick menu.
+<br>
+Scroll down and enter "Core Options". Scroll right down to the bottom and set the following options:
+<br>
+- S2M (Joypad Analog Stick to Mouse Mapping) - R-stick
+<br>
+- S2M Click Shift Button Mapping - R1
+<br>
+- Joypad D-pad to Mouse/Keyboard/Joypad Mapping - Keypad 3 button or Atari Joystick
+<br>
+- Joypad to NP2 menu Mapping - L2
+<br>
+You may also need to tweak CPU Feature, CPU Clock Multiplier and RAM Size if you get any slowdown in games. I set mine to Intel Pentium 4, 16 and 32 respectively. It's not perfect but works fairly well.
+<br>
+You can now exit the quick menu and hopefully controls should now be working.
+<br>
+Hope this helps. Let me know if you need any further help.
+<br>
+</p>
+
+</body>

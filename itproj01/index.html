@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ansible: A Very Fast Guide</title>
+<link rel="stylesheet" href="/css/mvp.css">
+
+<link rel="stylesheet" href="/css/mvp.css">
+<a href="/"><-- Home</a>
+
+</head>
+<body>
+<h1>Ansible: A Very Fast Guide</h1>
+2026-08-15
+
+<h2>Requirements for following this page</h2>
+<p>
+<ol>
+<li>You have a machine that you can ssh into (a VM, physical machine, cloud server, whatever).</li>
+<li>You are using Ansible on Linux or Mac (Windows is more work to install; see the official docs).</li>
+<li>You can read.</li>
+</ol>
+</p>
+
+<h2>Introduction</h2>
+<p>
+This page is a terse overview of Ansible that gives a basic introduction so you can start experimenting immediately. It defines clear relations between features and provides simple use cases.
+</p>
+<p>
+Ansible can be confusing at first because there are many ways to do things, but it becomes intuitive. This page is basically a high-level summary of the <a href="https://docs.ansible.com/projects/ansible/latest/index.html">official Ansible documentation</a>.
+</p>
+
+<h3>What is Ansible</h3>
+<p>
+Ansible lets you write predefined configurations for machines and the methods to apply those configurations. Instead of manual configuration of servers (which scales poorly), you automate it. You also obtain a uniform way to describe server configurations for many machines.
+</p>
+<p>
+Source: <a href="https://docs.ansible.com/projects/ansible/latest/index.html">Ansible documentation index</a>.
+</p>
+
+<h3>Use YAML or INI formatting?</h3>
+<p>
+Use YAML for everything. INI format is acceptable for basic inventories, but YAML is the effective standard for Ansible.
+</p>
+<p>
+Source: Inventory documentation notes that YAML becomes preferable as the number of managed nodes increases. See <a href="https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html">Building an inventory</a>.
+</p>
+
+<h3>Installing</h3>
+<p>
+Follow the official installation instructions: <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/index.html">Installing Ansible</a>.
+</p>
+
+<h2>The most basic project structure</h2>
+<p>
+A useful Ansible project requires:
+</p>
+<ol>
+<li>An inventory file (or directory)</li>
+<li>A playbook to apply to those inventory groups</li>
+<li>Modules to call (built-in and external)</li>
+<li>Dealing with secrets. Not dealt with in this page, so <a href="https://docs.ansible.com/projects/ansible/latest/cli/ansible-vault.html"> go here for vault docs.</a></li>
+</ol>
+
+<h2>Inventory</h2>
+<p>
+An inventory defines the hosts and groups that Ansible manages. The preferred format for anything beyond the simplest cases is YAML.
+</p>
+<p>
+Minimal YAML inventory example:
+</p>
+<pre><code>all:
+  hosts:
+    web1:
+      ansible_host: 192.0.2.50
+    web2:
+      ansible_host: 192.0.2.51
+  children:
+    webservers:
+      hosts:
+        web1:
+        web2:
+    dbservers:
+      hosts:
+        db1:
+          ansible_host: 192.0.2.60
+</code></pre>
+<p>
+Group hosts logically by function (web, db), location, or environment (dev, staging, prod). Avoid spaces, hyphens, or leading numbers in group names. Group names are case-sensitive.
+</p>
+<p>
+Variables can be defined inline, but the recommended practice is to store them in separate files relative to the inventory: <code>group_vars/</code> and <code>host_vars/</code> directories. Prefer not to store variables in the main inventory file itself.
+</p>
+<p>
+Common connection variables include <code>ansible_user</code>, <code>ansible_ssh_private_key_file</code>, and <code>ansible_port</code>. Never store passwords in plain text.
+</p>
+<p>
+Sources: <a href="https://docs.ansible.com/ansible/latest/intro_inventory.html">Inventory</a>, <a href="https://docs.ansible.com/projects/ansible/latest/getting_started/get_started_inventory.html">Building an inventory</a>, <a href="https://docs.ansible.com/ansible/latest/playbooks_best_practices.html">Best Practices</a>.
+</p>
+
+<h2>Running ansible playbooks</h2>
+<p>
+Use <code>ansible-playbook</code> to execute playbooks. Key flags that affect variable availability and secrets:
+</p>
+<ul>
+<li><code>-i</code> / <code>--inventory</code>: specify inventory file or directory</li>
+<li><code>-e</code> / <code>--extra-vars</code>: pass extra variables (key=value or YAML/JSON; use <code>@file</code> for files)</li>
+<li><code>--ask-vault-pass</code> or <code>--vault-password-file</code>: supply vault password</li>
+<li><code>--vault-id</code>: specify vault identity and password source</li>
+<li><code>-l</code> / <code>--limit</code>: limit to a subset of hosts</li>
+<li><code>-C</code> / <code>--check</code>: dry-run mode</li>
+<li><code>-D</code> / <code>--diff</code>: show differences</li>
+<li><code>-b</code> / <code>--become</code>: enable privilege escalation</li>
+</ul>
+
+<h3><code>ansible-playbook -i [inventory]</code></h3>
+<h4>Minimal example</h4>
+<pre><code>ansible-playbook -i inventory.yml site.yml
+</code></pre>
+<p>
+With vault and extra variables:
+</p>
+<pre><code>ansible-playbook -i inventory.yml --ask-vault-pass -e "env=prod" site.yml
+</code></pre>
+<p>
+Source: <a href="https://docs.ansible.com/ansible/latest/cli/ansible-playbook.html">ansible-playbook CLI</a>.
+</p>
+
+<h2>Variables</h2>
+<p>
+Variables represent differences between systems. Define them in inventory, playbooks, roles, files, or on the command line. Reference them with Jinja2 syntax: <code>{{ variable_name }}</code>.
+</p>
+<p>
+Variable names may contain only letters, numbers, and underscores. They cannot begin with a number and cannot be Python or Ansible keywords.
+</p>
+<p>
+Simple example:
+</p>
+<pre><code>remote_install_path: /opt/my_app_config
+</code></pre>
+<p>
+In a playbook or template:
+</p>
+<pre><code>dest: "{{ remote_install_path }}/foo.cfg"
+</code></pre>
+<p>
+If a value starts with <code>{{</code>, quote the entire expression for valid YAML.
+</p>
+
+<h3>How variables are referenced between files</h3>
+<p>
+Precedence (simplified, from lowest to highest influence in many cases): <br>
+role defaults -> inventory group/host vars <br> -> play vars -> task vars <br> -> extra-vars (command line). 
+<br>
+Full details are in the documentation.
+</p>
+<p>
+Common placement:
+</p>
+<ul>
+<li>Inventory:  / <code>group_vars/</code> / <code>host_vars/</code></li>
+<li>Play-level:  <code>vars:</code> or <code>vars_files:</code></li>
+<li>Role: <code>defaults/</code> and <code>vars/</code></li>
+<li>Registered results from tasks</li>
+<li>Command-line <code>-e</code></li>
+</ul>
+<p>
+Inside templates and playbooks you have access to all variables in scope for the current host, plus facts and magic variables.
+</p>
+<p>
+Sources: <a href="https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html">Using Variables</a>
+</p>
+
+
+<h2>Playbooks</h2>
+<p>
+A playbook is a YAML file containing one or more plays. Each play maps a set of hosts (from inventory) to a list of tasks. Tasks call modules.
+</p>
+<p>
+Minimal playbook:
+</p>
+<pre><code>---
+- name: Configure web servers
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Ensure nginx is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+
+    - name: Start and enable nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+</code></pre>
+<p>
+Plays can include <code>vars</code>, <code>vars_files</code>, handlers, roles, and conditionals. Use <code>import_*</code> for static inclusion and <code>include_*</code> for dynamic inclusion.
+<br>
+In this case, the <b>task</b> Ensure nginx is installed uses the <b>modules</b> <code>ansible.builtin.package</code> and <code>ansible.builtin.service</code>
+</p>
+<p>
+Source: Official playbook documentation (linked from the main Ansible docs index).
+</p>
+
+<h2>Templating</h2>
+<h3>Jinja2 templating</h3>
+<p>
+Ansible uses Jinja2 for templating. Templates are processed by the <code>template</code> module.
+</p>
+
+<h4>Templating for generating configuration files</h4>
+<p>
+Create a template file ending in <code>.j2</code> (for example <code>nginx.conf.j2</code>). Reference variables with <code>{{ var }}</code>. Conditionals and loops are available inside templates.
+</p>
+<pre><code>- name: Deploy nginx config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload nginx
+</code></pre>
+<p>
+Special variables available in templates include <code>ansible_managed</code>, <code>template_host</code>, and others.
+</p>
+<p>
+Source: <a href="https://docs.ansible.com/ansible/latest/modules/template_module.html">template module</a>, and Jinja2 documentation is referenced there.
+</p>
+
+<h2>See also:</h2>
+<h3>Recommended file structure</h3>
+<p>
+To see recommended file structure go to <a href="https://docs.ansible.com/projects/ansible/latest/tips_tricks/sample_setup.html">this page</a>
+</p>
+<h3>Encryption and Secrets</h3>
+<a href="https://docs.ansible.com/projects/ansible/latest/vault_guide/vault.html">Official Vault documentation </a>
+
+</body>
+</html>
